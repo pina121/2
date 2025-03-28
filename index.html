@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Rembg Background Remover</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+        #result { margin-top: 20px; }
+        #download { display: none; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Remove Image Background</h1>
+    <input type="file" id="fileInput" accept=".png,.jpg,.jpeg" />
+    <button onclick="processImage()">Process</button>
+    <div id="result"></div>
+    <a id="download" href="#" download="output.png">Download Result</a>
+
+    <script>
+        async function processImage() {
+            const fileInput = document.getElementById('fileInput');
+            const resultDiv = document.getElementById('result');
+            const downloadLink = document.getElementById('download');
+
+            if (!fileInput.files[0]) {
+                alert('Please select an image first!');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            try {
+                resultDiv.innerHTML = 'Processing...';
+                
+                // Replace with your backend URL (e.g., Render/Heroku)
+                const response = await fetch('https://your-backend-url/remove-bg', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Failed to process image');
+                }
+
+                const blob = await response.blob();
+                const imageUrl = URL.createObjectURL(blob);
+                
+                resultDiv.innerHTML = `<img src="${imageUrl}" style="max-width: 100%;" />`;
+                downloadLink.href = imageUrl;
+                downloadLink.style.display = 'inline-block';
+            } catch (error) {
+                resultDiv.innerHTML = `Error: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>
