@@ -1,27 +1,44 @@
 from flask import Flask, render_template, request, send_file
 from rembg import remove
 from PIL import Image
-from io import BytesIO
+import io
 
 app = Flask(__name__)
 
-@app.route('/', methods=['GET', 'POST'])
-def upload_file():
-    if request.method == 'POST':
-        if 'file' not in request.files:
-            return 'No file uploaded', 400
-        file = request.files['file']
-        if file.filename == '':
-            return 'No file selected', 400
-        if file:
+@app.route("/", methods=["GET", "POST"])
+def index():
+    if request.method == "POST":
+        # Check if an image file was uploaded
+        if "file" not in request.files:
+            return "No file part", 400
+        file = request.files["file"]
+        if file.filename == "":
+            return "No selected file", 400
+        
+        try:
+            # Open the uploaded image
             input_image = Image.open(file.stream)
-            output_image = remove(input_image, post_process_mask=True)
-            img_io = BytesIO()
-            output_image.save(img_io, 'PNG')
+            
+            # Remove the background
+            output_image = remove(input_image)
+            
+            # Save the output image to a bytes buffer
+            img_io = io.BytesIO()
+            output_image.save(img_io, format="PNG")
             img_io.seek(0)
-            # return send_file(img_io, mimetype='image/png')  # Change download in separatre browser tab
-            return send_file(img_io, mimetype='image/png', as_attachment=True, download_name='_rmbg.png')
-    return render_template('index.html')
+            
+            # Return the processed image as a downloadable file
+            return send_file(
+                img_io,
+                mimetype="image/png",
+                as_attachment=True,
+                download_name="output.png"
+            )
+        except Exception as e:
+            return f"Error processing image: {str(e)}", 500
+    
+    # Render the upload form for GET requests
+    return render_template("index.html")
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', debug=True, port=5100)
+if __name__ == "__main__":
+    app.run(debug=True)
