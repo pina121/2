@@ -5,12 +5,12 @@ import io
 
 app = Flask(__name__)
 
-@app.route("/", methods=["GET", "POST"])
+@app.route("/", methods=["GET", "POST"])  # Ensure both GET and POST are allowed
 def index():
     if request.method == "POST":
         # Check if an image file was uploaded
         if "file" not in request.files:
-            return "No file part", 400
+            return "No file part in the request", 400
         file = request.files["file"]
         if file.filename == "":
             return "No selected file", 400
