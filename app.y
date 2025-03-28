@@ -5,16 +5,24 @@ from flask_cors import CORS
 from rembg import remove
 from werkzeug.utils import secure_filename
 
+# Initialize Flask app
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes
+
+# Configure CORS to allow requests from GitHub Pages
+CORS(app, resources={
+    r"/remove-bg": {
+        "origins": [
+            "https://yourusername.github.io",  # Your GitHub Pages URL
+            "http://localhost:8000"            # For local testing
+        ],
+        "methods": ["POST"],
+        "allow_headers": ["Content-Type"]
+    }
+})
 
 # Configuration
-UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp'}
-MAX_CONTENT_LENGTH = 10 * 1024 * 1024  # 10MB limit
-
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['MAX_CONTENT_LENGTH'] = MAX_CONTENT_LENGTH
+app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024  # 10MB limit
 
 def allowed_file(filename):
     return '.' in filename and \
@@ -22,50 +30,36 @@ def allowed_file(filename):
 
 @app.route('/remove-bg', methods=['POST'])
 def remove_background():
-    # Check if file was uploaded
+    # Check if file exists in request
     if 'file' not in request.files:
-        return jsonify({'error': 'No file part'}), 400
+        return jsonify({'error': 'No file uploaded'}), 400
     
     file = request.files['file']
     
-    # Check if file is empty
+    # Validate file
     if file.filename == '':
-        return jsonify({'error': 'No selected file'}), 400
-    
-    # Validate file type
+        return jsonify({'error': 'Empty filename'}), 400
     if not allowed_file(file.filename):
-        return jsonify({'error': 'Allowed file types are: png, jpg, jpeg, webp'}), 400
+        return jsonify({'error': 'Invalid file type'}), 400
     
     try:
-        # Secure filename and process image
-        filename = secure_filename(file.filename)
+        # Process image
         input_image = file.read()
-        
-        # Remove background
         output_image = remove(input_image)
         
-        # Return processed image
+        # Return the processed image
         return send_file(
             BytesIO(output_image),
             mimetype='image/png',
             as_attachment=True,
-            download_name=f'removed_bg_{filename}'
+            download_name='no-bg.png'
         )
-        
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/health', methods=['GET'])
-def health_check():
-    return jsonify({'status': 'healthy'}), 200
+@app.route('/')
+def home():
+    return jsonify({'status': 'Server is running'}), 200
 
 if __name__ == '__main__':
-    # Create upload folder if it doesn't exist
-    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-    
-    # Run the app
-    app.run(
-        host='0.0.0.0',
-        port=int(os.environ.get('PORT', 5000)),
-        debug=os.environ.get('DEBUG', False)
-    )
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
