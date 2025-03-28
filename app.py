@@ -5,7 +5,7 @@ import io
 
 app = Flask(__name__)
 
-@app.route("/", methods=["GET", "POST"])  # Ensure both GET and POST are allowed
+@app.route("/", methods=["GET", "POST"])  # Ensure both GET and POST are explicitly allowed
 def index():
     if request.method == "POST":
         # Check if an image file was uploaded
