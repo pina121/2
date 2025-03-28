@@ -1,86 +1,80 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Background Remover Tool</title>
+<html>
+  <head>
+    <title>✂️ rmbg</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            text-align: center;
-        }
-        h1 {
-            color: #333;
-        }
-        .upload-container {
-            border: 2px dashed #ccc;
-            padding: 20px;
-            margin: 20px 0;
-            border-radius: 5px;
-        }
-        #preview {
-            max-width: 100%;
-            max-height: 400px;
-            margin-top: 20px;
-            display: none;
-        }
-        .btn {
-            background-color: #4CAF50;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-            margin-top: 10px;
-        }
-        .btn:hover {
-            background-color: #45a049;
-        }
-        #loading {
-            display: none;
-            margin-top: 20px;
-        }
+      body {
+        height: 100vh;
+        display: flex;
+
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+      }
+
+      .drop-zone {
+        border: 2px dashed #ccc;
+        padding: 20px;
+        width: 80vw;
+        height: 80vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+      }
+
+      .drop-zone.dragover {
+        background-color: #f0f0f0;
+      }
     </style>
-</head>
-<body>
-    <h1>Background Remover Tool</h1>
-    <p>Upload an image to remove its background</p>
-    
-    <div class="upload-container">
-        <form id="upload-form" action="/remove-bg" method="post" enctype="multipart/form-data">
-            <input type="file" id="image-input" name="image" accept="image/*" required>
-            <button type="submit" class="btn">Remove Background</button>
-        </form>
+  </head>
+  <body>
+    <div id="dropZone" class="drop-zone">
+      <h1>rmbg</h1>
+      <form
+        id="uploadForm"
+        action="/"
+        method="post"
+        enctype="multipart/form-data"
+      >
+        <input id="fileInput" type="file" name="file" />
+        <input type="submit" value="rm" />
+      </form>
     </div>
-    
-    <div id="loading">Processing... Please wait.</div>
-    <img id="preview" src="" alt="Image preview">
-    
+
     <script>
-        const imageInput = document.getElementById('image-input');
-        const preview = document.getElementById('preview');
-        const uploadForm = document.getElementById('upload-form');
-        const loading = document.getElementById('loading');
-        
-        imageInput.addEventListener('change', function() {
-            const file = this.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    preview.src = e.target.result;
-                    preview.style.display = 'block';
-                }
-                reader.readAsDataURL(file);
-            }
-        });
-        
-        uploadForm.addEventListener('submit', function() {
-            loading.style.display = 'block';
-        });
+      let dropZone = document.getElementById("dropZone");
+      let fileInput = document.getElementById("fileInput");
+      let uploadForm = document.getElementById("uploadForm");
+
+      dropZone.addEventListener("click", function () {
+        fileInput.click();
+      });
+
+      fileInput.addEventListener("change", function () {
+        if (fileInput.files.length > 0) {
+          uploadForm.submit();
+        }
+      });
+
+      dropZone.addEventListener("dragover", function (e) {
+        this.classList.add("dragover");
+      });
+
+      dropZone.addEventListener("dragleave", function (e) {
+        this.classList.remove("dragover");
+      });
+
+      dropZone.addEventListener("drop", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.classList.remove("dragover");
+
+        let file = e.dataTransfer.files[0];
+        fileInput.files = e.dataTransfer.files;
+        uploadForm.submit();
+      });
     </script>
-</body>
+  </body>
 </html>
